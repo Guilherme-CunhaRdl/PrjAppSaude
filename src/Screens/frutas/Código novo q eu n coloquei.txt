@@ -1,0 +1,149 @@
+import React from 'react'
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image } from 'react-native'
+import Icon from 'react-native-vector-icons/MaterialIcons'
+
+export default function NutritionScreen() {
+    // Dados ilustrativos
+    const frutasExemplo = [
+        {
+            nome: "Maçã",
+            calorias: 52,
+            carboidratos: "14g",
+            acucar: "10g",
+            imagem: "https://cdn.pixabay.com/photo/2016/01/05/13/58/apple-1122537_640.jpg"
+        },
+        {
+            nome: "Banana",
+            calorias: 89,
+            carboidratos: "23g",
+            acucar: "12g",
+            imagem: "https://cdn.pixabay.com/photo/2017/06/27/22/21/banana-2449019_640.jpg"
+        }
+    ]
+
+    return (
+        <ScrollView contentContainerStyle={estilos.container}>
+            {/* Cabeçalho */}
+            <View style={estilos.cabecalho}>
+                <Icon name="local-florist" size={30} color="#2ecc71" />
+                <Text style={estilos.titulo}>Buscar Frutas</Text>
+            </View>
+
+            {/* Campo de busca */}
+            <View style={estilos.containerBusca}>
+                <TextInput
+                    style={estilos.inputBusca}
+                    placeholder="Digite o nome da fruta"
+                />
+                <TouchableOpacity style={estilos.botaoBusca}>
+                    <Icon name="search" size={24} color="white" />
+                </TouchableOpacity>
+            </View>
+
+            {/* Exemplo de resultados */}
+            <Text style={estilos.tituloSecao}>Exemplo de resultados:</Text>
+            
+            {frutasExemplo.map((fruta, index) => (
+                <View key={index} style={estilos.cardFruta}>
+                    <Image source={{ uri: fruta.imagem }} style={estilos.imagemFruta} />
+                    <View style={estilos.infoFruta}>
+                        <Text style={estilos.nomeFruta}>{fruta.nome}</Text>
+                        
+                        <View style={estilos.linhaDetalhe}>
+                            <Icon name="local-fire-department" size={18} color="#e74c3c" />
+                            <Text style={estilos.textoDetalhe}>{fruta.calorias} calorias</Text>
+                        </View>
+                        
+                        <View style={estilos.linhaDetalhe}>
+                            <Icon name="pie-chart" size={18} color="#3498db" />
+                            <Text style={estilos.textoDetalhe}>{fruta.carboidratos} carboidratos</Text>
+                        </View>
+                        
+                        <View style={estilos.linhaDetalhe}>
+                            <Icon name="cake" size={18} color="#9b59b6" />
+                            <Text style={estilos.textoDetalhe}>{fruta.acucar} açúcar</Text>
+                        </View>
+                    </View>
+                </View>
+            ))}
+        </ScrollView>
+    )
+}
+
+const estilos = StyleSheet.create({
+    container: {
+        flexGrow: 1,
+        padding: 15,
+        backgroundColor: '#fff'
+    },
+    cabecalho: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 20
+    },
+    titulo: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginLeft: 10,
+        color: '#2c3e50'
+    },
+    containerBusca: {
+        flexDirection: 'row',
+        marginBottom: 20
+    },
+    inputBusca: {
+        flex: 1,
+        backgroundColor: '#ecf0f1',
+        padding: 12,
+        borderRadius: 8,
+        marginRight: 10,
+        borderWidth: 1,
+        borderColor: '#ddd'
+    },
+    botaoBusca: {
+        backgroundColor: '#2ecc71',
+        borderRadius: 8,
+        width: 50,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    tituloSecao: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#7f8c8d',
+        marginBottom: 15
+    },
+    cardFruta: {
+        flexDirection: 'row',
+        backgroundColor: '#f9f9f9',
+        borderRadius: 10,
+        padding: 15,
+        marginBottom: 15,
+        alignItems: 'center'
+    },
+    imagemFruta: {
+        width: 70,
+        height: 70,
+        borderRadius: 35,
+        marginRight: 15
+    },
+    infoFruta: {
+        flex: 1
+    },
+    nomeFruta: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#2c3e50',
+        marginBottom: 8
+    },
+    linhaDetalhe: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 5
+    },
+    textoDetalhe: {
+        fontSize: 14,
+        color: '#34495e',
+        marginLeft: 8
+    }
+})
