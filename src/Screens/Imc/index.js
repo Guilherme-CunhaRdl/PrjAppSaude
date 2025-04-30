@@ -10,6 +10,9 @@ import {
 } from 'react-native';
 import { CircularProgress } from 'react-native-circular-progress';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
 
 export default function Imc() {
   const [altura, setAltura] = useState('');
@@ -84,6 +87,22 @@ export default function Imc() {
       default: return '#6200ee';
     }
   };
+
+  useEffect(() => {
+    const carregarDados = async () => {
+      try {
+        const pesoSalvo = await AsyncStorage.getItem('peso');
+        const alturaSalva = await AsyncStorage.getItem('altura');
+  
+        if (pesoSalvo !== null) setPeso(pesoSalvo);
+        if (alturaSalva !== null) setAltura(alturaSalva);
+      } catch (error) {
+        console.log('Erro ao carregar peso e altura do AsyncStorage:', error);
+      }
+    };
+  
+    carregarDados();
+  }, []);
 
   return (
     <ScrollView contentContainerStyle={estilos.container}>

@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
 
 
@@ -26,9 +27,17 @@ const handleCadastro = async () => {
       altura: altura
     });
 
+    await AsyncStorage.setItem('peso', peso);
+    await AsyncStorage.setItem('altura', altura);
+
+    const pesoSalvo = await AsyncStorage.getItem('peso');
+    const alturaSalva = await AsyncStorage.getItem('altura');
+    console.log('Peso salvo:', pesoSalvo);
+    console.log('Altura salva:', alturaSalva);
+
     console.log('Usuário cadastrado:', response.data);
     alert('Cadastro realizado com sucesso!');
-
+    navigation.navigate('Home'); 
 
   } catch (error) {
     if (error.response) {
