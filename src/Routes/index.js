@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 
+
 // Importações das suas telas (MANTIDAS EXATAMENTE COMO VOCÊ TEM)
 import Home from '../Screens/Home';
 import Imc from '../Screens/Imc';
@@ -69,6 +70,13 @@ export default function Rotas() {
           },
         }}
       >
+
+
+<Stack.Screen 
+          name="Login" 
+          component={Login} 
+          options={{ headerShown: false }} 
+        />
 
         <Stack.Screen 
           name="Home" 
@@ -135,11 +143,7 @@ export default function Rotas() {
           })}
         />
  
-        <Stack.Screen 
-          name="Login" 
-          component={Login} 
-          options={{ headerShown: false }} 
-        />
+ 
         
         <Stack.Screen 
           name="Cadastro" 

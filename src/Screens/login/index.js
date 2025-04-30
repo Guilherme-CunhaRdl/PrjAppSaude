@@ -1,14 +1,42 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+
 
 export default function Login() {
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
+    const navigation = useNavigation();
 
-    const handleLogin = () => {
-        // Lógica de login
-        console.log('Login com:', email, senha);
+    const handleLogin = async () => {
+        try {
+            const response = await axios.post('http://127.0.0.1:8000/api/login', {
+                email: email,
+                password: senha,
+            });
+            
+
+     
+        
+            const { token, user } = response.data;
+    
+          
+            await AsyncStorage.setItem('token', token);
+            await AsyncStorage.setItem('user', JSON.stringify(user));
+    
+            console.log('Login realizado com sucesso');
+            navigation.navigate('Home');
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+                alert('Credenciais inválidas. Verifique seu e-mail e senha.');
+            } else {
+                console.error('Erro no login:', error);
+                alert('Erro ao tentar fazer login. Tente novamente mais tarde.');
+            }
+        }
     };
 
     return (
