@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Pressable } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,10 +18,11 @@ import Frases from '../Screens/Frases';
 import Remedio from '../Screens/remedio';
 import Pressao from '../Screens/pressao';
 
+
 const Stack = createNativeStackNavigator();
 
 
-const HeaderHome = () => (
+const HeaderHome = ({ navigation }) => (
   <LinearGradient
     colors={['#5A00DD', '#7B2CBF']}
     style={styles.gradiente}
@@ -33,7 +34,10 @@ const HeaderHome = () => (
         <Icon name="eco" size={32} color="#fff" style={styles.iconeLogo} />
         <Text style={styles.titulo}>VITALIS</Text>
       </View>
-      <Icon name="account-circle" size={30} color="#fff" style={styles.iconePerfil} />
+
+  
+
+      
     </View>
   </LinearGradient>
 );
@@ -82,7 +86,7 @@ export default function Rotas() {
           name="Home" 
           component={Home}
           options={{
-            header: () => <HeaderHome />,
+            header: () => <HeaderHome navigation={navigation} />,
           }}
         />
 
@@ -150,6 +154,9 @@ export default function Rotas() {
           component={Cadastro} 
           options={{ headerShown: false }} 
         />
+
+      
+     
       </Stack.Navigator>
     </NavigationContainer>
   );
