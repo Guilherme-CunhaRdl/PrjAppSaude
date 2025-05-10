@@ -13,6 +13,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
 
 
 export default function Perfil() {
@@ -25,27 +26,43 @@ export default function Perfil() {
     altura: '175',
     imagem: null
   });
+
+  const [perfil, setPerfil] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [editando, setEditando] = useState(false);
   const [imagemTemp, setImagemTemp] = useState(null);
+  const BASE_URL = 'http://127.0.0.1:8000';
 
   useEffect(() => {
-    const carregarDados = async () => {
+    const carregarPerfil = async () => {
       try {
-        const dados = await AsyncStorage.multiGet([
-          'userNome', 'userEmail', 'userPeso', 'userAltura', 'userImagem'
-        ]);
+
+        const token = await AsyncStorage.getItem('authToken');
+
+    
         
-        if (dados[0][1]) setUserData(prev => ({...prev, nome: dados[0][1]}));
-        if (dados[1][1]) setUserData(prev => ({...prev, email: dados[1][1]}));
-        if (dados[2][1]) setUserData(prev => ({...prev, peso: dados[2][1]}));
-        if (dados[3][1]) setUserData(prev => ({...prev, altura: dados[3][1]}));
-        if (dados[4][1]) setUserData(prev => ({...prev, imagem: dados[4][1]}));
-      } catch (error) {
-        console.log('Erro ao carregar dados:', error);
+    
+        const { data } = await axios.get(`${BASE_URL}/api/perfil`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+    
+     
+      console.log("Dados do perfil:", data);
+        setPerfil(data);
+      } catch (err) {
+        console.log("Erro ao carregar:", err.message);
+        navigation.navigate('Login'); 
+      } finally {
+        setLoading(false);
       }
     };
-    carregarDados();
+
+    carregarPerfil();
   }, []);
+
+
+
 
   const selecionarImagem = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -63,6 +80,8 @@ export default function Perfil() {
 
     if (!result.canceled) setImagemTemp(result.assets[0].uri);
   };
+
+
 
   const salvarAlteracoes = async () => {
     try {
@@ -85,32 +104,42 @@ export default function Perfil() {
     <ScrollView contentContainerStyle={styles.container}>
       {/* Área da Foto */}
       <View style={styles.fotoArea}>
-        <Pressable 
-          style={styles.fotoContainer}
-          onPress={editando ? selecionarImagem : null}
-        >
-          {imagemTemp || userData.imagem ? (
-            <Image 
-              source={{ uri: imagemTemp || userData.imagem }} 
-              style={styles.fotoPerfil} 
-            />
-          ) : (
-            <View style={styles.fotoPlaceholder}>
-              <Icon name="person" size={50} color="#5A00DD" />
-            </View>
-          )}
-          {editando && (
-            <View style={styles.badgeEditar}>
-              <Icon name="edit" size={16} color="#FFF" />
-            </View>
-          )}
-        </Pressable>
+  <Pressable 
+    style={styles.fotoContainer}
+    onPress={editando ? selecionarImagem : null}
+  >
+    {imagemTemp ? (
+      <Image 
+        source={{ uri: imagemTemp }} 
+        style={styles.fotoPerfil} 
+      />
+    ) : perfil?.imagem_url ? (
+      <Image 
+        source={{ uri: perfil.imagem_url }} 
+        style={styles.fotoPerfil} 
+      />
+    ) : userData.imagem ? (
+      <Image 
+        source={{ uri: userData.imagem }} 
+        style={styles.fotoPerfil} 
+      />
+    ) : (
+      <View style={styles.fotoPlaceholder}>
+        <Icon name="person" size={50} color="#5A00DD" />
       </View>
+    )}
+    {editando && (
+      <View style={styles.badgeEditar}>
+        <Icon name="edit" size={16} color="#FFF" />
+      </View>
+    )}
+  </Pressable>
+</View>
 
       {/* Dados do Usuário */}
       <View style={styles.dadosContainer}>
-        <Text style={styles.nomeUsuario}>{userData.nome}</Text>
-        <Text style={styles.emailUsuario}>{userData.email}</Text>
+        <Text style={styles.nomeUsuario}>{perfil?.nome}</Text>
+        <Text style={styles.emailUsuario}>{perfil?.email}</Text>
 
         <View style={styles.camposContainer}>
           <View style={styles.campo}>
@@ -123,7 +152,7 @@ export default function Perfil() {
                 onChangeText={(t) => setUserData({...userData, peso: t})}
               />
             ) : (
-              <Text style={styles.textoDado}>{userData.peso} kg</Text>
+              <Text style={styles.textoDado}>{perfil?.peso} kg</Text>
             )}
           </View>
 
@@ -137,7 +166,7 @@ export default function Perfil() {
                 onChangeText={(t) => setUserData({...userData, altura: t})}
               />
             ) : (
-              <Text style={styles.textoDado}>{userData.altura} cm</Text>
+              <Text style={styles.textoDado}>{perfil?.altura} cm</Text>
             )}
           </View>
         </View>
