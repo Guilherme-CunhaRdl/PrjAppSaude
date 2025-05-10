@@ -49,6 +49,7 @@ export default function Home() {
                     </View>
                 </View>
 
+
  
                 <Text style={styles.tituloSecao}>FERRAMENTAS</Text>
                 <View style={styles.ferramentasGrid}>
@@ -158,4 +159,13 @@ const styles = StyleSheet.create({
         color: '#fff',
         textAlign: 'center',
     },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+        marginLeft: 5,
+        paddingRight: 10,
+      },
+
 });

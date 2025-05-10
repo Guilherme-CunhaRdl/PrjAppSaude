@@ -46,7 +46,7 @@ export default function Login() {
             <ScrollView contentContainerStyle={estilos.scrollContainer}>
                 {/* Header */}
                 <View style={estilos.header}>
-                    <Icon name="fitness-center" size={50} color="#6200ee" />
+                    <Icon name="fitness-center" size={50} color="#5A00A3" />
                     <Text style={estilos.titulo}>Bem-vindo de volta!</Text>
                     <Text style={estilos.subtitulo}>Acesse sua conta para continuar</Text>
                 </View>
@@ -54,7 +54,7 @@ export default function Login() {
                 {/* Formulário */}
                 <View style={estilos.formContainer}>
                     <View style={estilos.inputContainer}>
-                        <Icon name="email" size={20} color="#6200ee" style={estilos.iconeInput} />
+                        <Icon name="email" size={20} color="#5A00A3" style={estilos.iconeInput} />
                         <TextInput
                             style={estilos.input}
                             placeholder="E-mail"
@@ -66,7 +66,7 @@ export default function Login() {
                     </View>
 
                     <View style={estilos.inputContainer}>
-                        <Icon name="lock" size={20} color="#6200ee" style={estilos.iconeInput} />
+                        <Icon name="lock" size={20} color="#5A00A3" style={estilos.iconeInput} />
                         <TextInput
                             style={estilos.input}
                             placeholder="Senha"
@@ -111,7 +111,7 @@ const estilos = StyleSheet.create({
     titulo: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#6200ee',
+        color: '#5A00A3',
         marginTop: 15
     },
     subtitulo: {
@@ -149,7 +149,7 @@ const estilos = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#6200ee',
+        backgroundColor: '#5A00A3',
         borderRadius: 25,
         height: 50,
         marginTop: 20,
@@ -170,7 +170,7 @@ const estilos = StyleSheet.create({
         fontSize: 14
     },
     textoDestaque: {
-        color: '#6200ee',
+        color: '#5A00A3',
         fontWeight: 'bold'
     }
 });

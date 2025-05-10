@@ -1,0 +1,307 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  ScrollView, 
+  Image, 
+  TextInput, 
+  Pressable,
+  Alert
+} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
+import { useNavigation } from '@react-navigation/native';
+
+
+export default function Perfil() {
+    const navigation = useNavigation();
+
+  const [userData, setUserData] = useState({
+    nome: 'Usuário Vitalis',
+    email: 'usuario@vitalis.com',
+    peso: '70',
+    altura: '175',
+    imagem: null
+  });
+  const [editando, setEditando] = useState(false);
+  const [imagemTemp, setImagemTemp] = useState(null);
+
+  useEffect(() => {
+    const carregarDados = async () => {
+      try {
+        const dados = await AsyncStorage.multiGet([
+          'userNome', 'userEmail', 'userPeso', 'userAltura', 'userImagem'
+        ]);
+        
+        if (dados[0][1]) setUserData(prev => ({...prev, nome: dados[0][1]}));
+        if (dados[1][1]) setUserData(prev => ({...prev, email: dados[1][1]}));
+        if (dados[2][1]) setUserData(prev => ({...prev, peso: dados[2][1]}));
+        if (dados[3][1]) setUserData(prev => ({...prev, altura: dados[3][1]}));
+        if (dados[4][1]) setUserData(prev => ({...prev, imagem: dados[4][1]}));
+      } catch (error) {
+        console.log('Erro ao carregar dados:', error);
+      }
+    };
+    carregarDados();
+  }, []);
+
+  const selecionarImagem = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissão necessária', 'Precisamos acessar sua galeria');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) setImagemTemp(result.assets[0].uri);
+  };
+
+  const salvarAlteracoes = async () => {
+    try {
+      await AsyncStorage.multiSet([
+        ['userNome', userData.nome],
+        ['userEmail', userData.email],
+        ['userPeso', userData.peso],
+        ['userAltura', userData.altura],
+        ['userImagem', imagemTemp || userData.imagem || '']
+      ]);
+      
+      setEditando(false);
+      Alert.alert('✅ Perfil atualizado!');
+    } catch (error) {
+      Alert.alert('❌ Erro ao salvar');
+    }
+  };
+
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      {/* Área da Foto */}
+      <View style={styles.fotoArea}>
+        <Pressable 
+          style={styles.fotoContainer}
+          onPress={editando ? selecionarImagem : null}
+        >
+          {imagemTemp || userData.imagem ? (
+            <Image 
+              source={{ uri: imagemTemp || userData.imagem }} 
+              style={styles.fotoPerfil} 
+            />
+          ) : (
+            <View style={styles.fotoPlaceholder}>
+              <Icon name="person" size={50} color="#5A00DD" />
+            </View>
+          )}
+          {editando && (
+            <View style={styles.badgeEditar}>
+              <Icon name="edit" size={16} color="#FFF" />
+            </View>
+          )}
+        </Pressable>
+      </View>
+
+      {/* Dados do Usuário */}
+      <View style={styles.dadosContainer}>
+        <Text style={styles.nomeUsuario}>{userData.nome}</Text>
+        <Text style={styles.emailUsuario}>{userData.email}</Text>
+
+        <View style={styles.camposContainer}>
+          <View style={styles.campo}>
+            <Text style={styles.label}>Peso (kg)</Text>
+            {editando ? (
+              <TextInput
+                style={styles.input}
+                keyboardType="numeric"
+                value={userData.peso}
+                onChangeText={(t) => setUserData({...userData, peso: t})}
+              />
+            ) : (
+              <Text style={styles.textoDado}>{userData.peso} kg</Text>
+            )}
+          </View>
+
+          <View style={styles.campo}>
+            <Text style={styles.label}>Altura (cm)</Text>
+            {editando ? (
+              <TextInput
+                style={styles.input}
+                keyboardType="numeric"
+                value={userData.altura}
+                onChangeText={(t) => setUserData({...userData, altura: t})}
+              />
+            ) : (
+              <Text style={styles.textoDado}>{userData.altura} cm</Text>
+            )}
+          </View>
+        </View>
+      </View>
+
+      {/* Botões */}
+      <View style={styles.botoesContainer}>
+        {editando ? (
+          <>
+            <Pressable 
+              style={[styles.botao, styles.botaoSalvar]}
+              onPress={salvarAlteracoes}
+            >
+              <Text style={styles.textoBotao}>Salvar Alterações</Text>
+            </Pressable>
+            <Pressable 
+              style={[styles.botao, styles.botaoCancelar]}
+              onPress={() => setEditando(false)}
+            >
+              <Text style={styles.textoBotao}>Cancelar</Text>
+            </Pressable>
+          </>
+        ) : (
+          <Pressable 
+            style={[styles.botao, styles.botaoEditar]}
+            onPress={() => setEditando(true)}
+          >
+            <Text style={styles.textoBotao}>Editar Perfil</Text>
+          </Pressable>
+        )}
+      </View>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flexGrow: 1,
+    backgroundColor: '#F8F9FA',
+    paddingTop: 30,
+    paddingBottom: 40,
+  },
+  fotoArea: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  fotoContainer: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#E2E8F0',
+    shadowColor: '#5A00DD',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  fotoPerfil: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 70,
+  },
+  fotoPlaceholder: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#EDF2F7',
+    borderRadius: 70,
+  },
+  badgeEditar: {
+    position: 'absolute',
+    bottom: 5,
+    right: 5,
+    backgroundColor: '#5A00DD',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  dadosContainer: {
+    backgroundColor: '#FFF',
+    borderRadius: 15,
+    padding: 20,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  nomeUsuario: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#3A0CA3',
+    textAlign: 'center',
+    marginBottom: 5,
+  },
+  emailUsuario: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  camposContainer: {
+    marginTop: 10,
+  },
+  campo: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 14,
+    color: '#5A00DD',
+    fontWeight: '600',
+    marginBottom: 5,
+  },
+  input: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    fontSize: 16,
+  },
+  textoDado: {
+    fontSize: 16,
+    color: '#333',
+    paddingVertical: 8,
+  },
+  botoesContainer: {
+    paddingHorizontal: 20,
+  },
+  botao: {
+    borderRadius: 12,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  botaoEditar: {
+    backgroundColor: '#5A00DD',
+  },
+  botaoSalvar: {
+    backgroundColor: '#4CAF50',
+  },
+  botaoCancelar: {
+    backgroundColor: '#FF4D6D',
+  },
+  textoBotao: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});

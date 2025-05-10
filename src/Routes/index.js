@@ -17,10 +17,9 @@ import Cadastro from '../Screens/cadastro';
 import Frases from '../Screens/Frases';
 import Remedio from '../Screens/remedio';
 import Pressao from '../Screens/pressao';
-
+import Perfil from  '../Screens/perfil';
 
 const Stack = createNativeStackNavigator();
-
 
 const HeaderHome = ({ navigation }) => (
   <LinearGradient
@@ -30,14 +29,19 @@ const HeaderHome = ({ navigation }) => (
     end={{ x: 1, y: 1 }}
   >
     <View style={styles.conteudoHeader}>
+      {/* Logo absolutamente centralizada */}
       <View style={styles.containerLogo}>
         <Icon name="eco" size={32} color="#fff" style={styles.iconeLogo} />
         <Text style={styles.titulo}>VITALIS</Text>
       </View>
 
-  
-
-      
+      {/* Ícone de perfil no canto direito */}
+      <Pressable 
+        onPress={() => navigation.navigate('Perfil')} 
+        style={styles.iconePerfil}
+      >
+        <Icon name="account-circle" size={28} color="#fff" />
+      </Pressable>
     </View>
   </LinearGradient>
 );
@@ -51,14 +55,27 @@ const HeaderApp = ({ navigation }) => (
     end={{ x: 1, y: 1 }}
   >
     <View style={styles.conteudoHeader}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.botaoVoltar}>
+      {/* Botão Voltar no canto esquerdo */}
+      <TouchableOpacity 
+        onPress={() => navigation.goBack()} 
+        style={styles.botaoVoltar}
+      >
         <Icon name="arrow-back" size={28} color="#fff" />
       </TouchableOpacity>
+
+      {/* Logo centralizada */}
       <View style={styles.containerLogo}>
         <Icon name="eco" size={28} color="#fff" style={styles.iconeLogo} />
         <Text style={styles.titulo}>VITALIS</Text>
       </View>
-      <View style={styles.espacoDireita} />
+
+      {/* Ícone de perfil no canto direito */}
+      <Pressable 
+        onPress={() => navigation.navigate('Perfil')} 
+        style={styles.iconePerfil}
+      >
+        <Icon name="account-circle" size={28} color="#fff" />
+      </Pressable>
     </View>
   </LinearGradient>
 );
@@ -82,15 +99,22 @@ export default function Rotas() {
           options={{ headerShown: false }} 
         />
 
-        <Stack.Screen 
-          name="Home" 
-          component={Home}
-          options={{
-            header: () => <HeaderHome navigation={navigation} />,
-          }}
-        />
+<Stack.Screen 
+  name="Home" 
+  component={Home}
+  options={({ navigation }) => ({  
+    header: () => <HeaderHome navigation={navigation} />,
+  })}
+/>
 
  
+<Stack.Screen 
+name="Perfil" 
+component={Perfil} 
+options={({ navigation }) => ({
+  header: () => <HeaderApp navigation={navigation} />,
+})}
+/>
         <Stack.Screen 
           name="Imc" 
           component={Imc}
@@ -169,13 +193,12 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     overflow: 'hidden',
+    paddingHorizontal: 15, // Adicionado padding geral
   },
   conteudoHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingTop: 10,
     height: '100%',
   },
   containerLogo: {
@@ -183,8 +206,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
-    flexDirection: 'row',
     justifyContent: 'center',
+    flexDirection: 'row',
+    zIndex: -1,
   },
   iconeLogo: {
     marginRight: 12,
@@ -196,13 +220,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   iconePerfil: {
-    marginLeft: 'auto',
+    marginLeft: 'auto', // Garante posicionamento à direita
+    padding: 8,
   },
   botaoVoltar: {
-    zIndex: 1,
-    padding: 10,
-  },
-  espacoDireita: {
-    width: 40,
+    padding: 8,
+    zIndex: 1, // Garante que fique acima da logo
   },
 });
