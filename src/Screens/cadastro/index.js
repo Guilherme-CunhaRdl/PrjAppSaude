@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Platform } from 'react-native';
 
 export default function Cadastro() {
   const navigation = useNavigation();
@@ -46,62 +47,93 @@ export default function Cadastro() {
       return;
     }
 
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
     });
 
-    if (!result.canceled) {
-      setImagem(result.assets[0].uri);
+ 
+
+    if (!result.canceled && result.assets) {
+      setImagem(result.assets[0]); // Atualiza o state com a imagem selecionada
     }
+
   };
 
   const handleCadastro = async () => {
     if (!validarFormulario()) return;
-
+  
     try {
-      // Salvar dados localmente
-      await AsyncStorage.multiSet([
-        ['userNome', nome],
-        ['userEmail', email],
-        ['userPeso', peso],
-        ['userAltura', altura],
-        ['userImagem', imagem || '']
-      ]);
-
-      // Enviar para o backend (se tiver API)
       const formData = new FormData();
+      
+      // Campos textuais
       formData.append('nome', nome);
       formData.append('email', email);
       formData.append('password', senha);
       formData.append('peso', peso);
       formData.append('altura', altura);
-      
-      if (imagem) {
-        formData.append('imagem', {
-          uri: imagem,
-          type: 'image/jpeg',
-          name: 'profile.jpg'
-        });
+  
+      // Adiciona a imagem corretamente
+      if (imagem && imagem.uri.startsWith('data:image')) {
+        const base64Response = await fetch(imagem.uri);
+        const blob = await base64Response.blob();
+        
+        formData.append('imagem', blob, imagem.name || 'foto.png');
       }
-
-      // Simulando envio para API (descomente quando tiver o backend)
-      // const response = await axios.post('SUA_API_AQUI', formData, {
-      //   headers: {
-      //     'Content-Type': 'multipart/form-data',
-      //   },
-      // });
-
-      Alert.alert('Sucesso', 'Cadastro realizado com sucesso!');
-      navigation.navigate('Login');
-
+  
+  
+      
+      const formDataEntries = [...formData.entries()];
+      console.log('Dados sendo enviados:', {
+        camposTextuais: {
+          nome: formData.get('nome'),
+          email: formData.get('email'),
+          peso: formData.get('peso'),
+          altura: formData.get('altura')
+        },
+        imagem: {
+          name: formData.get('imagem').name,
+          size: formData.get('imagem').size,
+          type: formData.get('imagem').type
+        }
+      });
+  
+      const response = await axios.post('http://127.0.0.1:8000/api/registrar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json'
+        },
+        transformRequest: (data) => data,
+        
+      });
+      console.log('Resposta da API:', response.data);
+  
+      if (response.data.success) {
+      
+        await AsyncStorage.multiSet([
+          ['userToken', response.data.token], 
+          ['userData', JSON.stringify(response.data.user)]
+        ]);
+  
+       
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login' }], 
+        });
+        
+        Alert.alert('Sucesso!', 'Cadastro realizado com sucesso!');
+      } else {
+        throw new Error(response.data.message || 'Erro no cadastro');
+      }
     } catch (error) {
-      console.error('Erro no cadastro:', error);
-      Alert.alert('Erro', 'Ocorreu um erro ao cadastrar. Tente novamente.');
+      console.error('Erro completo:', error.response?.data || error.message);
+      Alert.alert('Erro', error.response?.data?.message || 'Erro no cadastro');
     }
   };
+  
+  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -123,7 +155,7 @@ export default function Cadastro() {
         <View style={styles.campoImagemContainer}>
           <Pressable onPress={selecionarImagem} style={styles.botaoImagem}>
             {imagem ? (
-              <Image source={{ uri: imagem }} style={styles.imagemPerfil} />
+              <Image source={{ uri: imagem.uri }}  style={styles.imagemPerfil} />
             ) : (
               <View style={styles.placeholderImagem}>
                 <Icon name="add-a-photo" size={30} color="#5A00A3" />

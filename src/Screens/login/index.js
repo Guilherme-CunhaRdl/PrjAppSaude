@@ -4,6 +4,9 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { useEffect } from 'react';
+
+
 
 
 export default function Login() {
@@ -11,33 +14,44 @@ export default function Login() {
     const [senha, setSenha] = useState('');
     const navigation = useNavigation();
 
+    const verificarToken = async () => {
+        const token = await AsyncStorage.getItem('userToken');
+        if (token === '1') {
+          navigation.replace('Home'); 
+        }
+        setLoading(false);
+      };
+
+      useEffect(() => {
+        verificarToken();
+      }, []);
+ 
+
     const handleLogin = async () => {
         try {
-            const response = await axios.post('http://127.0.0.1:8000/api/login', {
-                email: email,
-                password: senha,
-            });
-            
-
-     
-        
-            const { token, user } = response.data;
-    
-          
-            await AsyncStorage.setItem('token', token);
-            await AsyncStorage.setItem('user', JSON.stringify(user));
-    
-            console.log('Login realizado com sucesso');
-            navigation.navigate('Home');
+          const response = await axios.post('http://127.0.0.1:8000/api/login', {
+            email: email,
+            password: senha
+          });
+      
+          await AsyncStorage.multiSet([
+            ['userToken', '1'],
+            ['authToken', response.data.token],
+            ['userData', JSON.stringify(response.data.user)]
+          ]);
+      
+          navigation.navigate('Home');
         } catch (error) {
-            if (error.response && error.response.status === 401) {
-                alert('Credenciais inválidas. Verifique seu e-mail e senha.');
-            } else {
-                console.error('Erro no login:', error);
-                alert('Erro ao tentar fazer login. Tente novamente mais tarde.');
-            }
+          await AsyncStorage.setItem('userToken', '0');
+          
+          if (error.response?.status === 401) {
+            alert('Credenciais inválidas');
+          } else {
+            alert('Erro no servidor');
+            console.error('Erro:', error);
+          }
         }
-    };
+      };
 
     return (
         <View 
