@@ -19,47 +19,57 @@ import axios from 'axios';
 export default function Perfil() {
     const navigation = useNavigation();
 
-  const [userData, setUserData] = useState({
-    nome: 'Usuário Vitalis',
-    email: 'usuario@vitalis.com',
-    peso: '70',
-    altura: '175',
-    imagem: null
-  });
+    const [userData, setUserData] = useState({
+      nome: '',
+      email: '',
+      peso: '',
+      altura: '',
+      imagem_url: null
+    });
 
   const [perfil, setPerfil] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editando, setEditando] = useState(false);
   const [imagemTemp, setImagemTemp] = useState(null);
+  const [imagem, setImagem] = useState(null);
   const BASE_URL = 'http://127.0.0.1:8000';
 
   useEffect(() => {
+
     const carregarPerfil = async () => {
       try {
-
         const token = await AsyncStorage.getItem('authToken');
-
-    
-        
-    
         const { data } = await axios.get(`${BASE_URL}/api/perfil`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-    
-     
-      console.log("Dados do perfil:", data);
-        setPerfil(data);
+
+       
+        
+        setUserData({
+          nome: data.nome || '',
+          email: data.email || '',
+          peso: data.peso ? String(data.peso) : '',
+          altura: data.altura ? String(data.altura) : '',
+          imagem_url: data.imagem_url || null
+        });
+
+        console.log('userData atualizado:', userData);
+        
       } catch (err) {
         console.log("Erro ao carregar:", err.message);
         navigation.navigate('Login'); 
       } finally {
         setLoading(false);
       }
-    };
 
+      
+    };
     carregarPerfil();
   }, []);
+
+
+ 
 
 
 
@@ -67,7 +77,7 @@ export default function Perfil() {
   const selecionarImagem = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permissão necessária', 'Precisamos acessar sua galeria');
+      Alert.alert('Permissão necessária', 'Precisamos acessar sua galeria para selecionar uma foto');
       return;
     }
 
@@ -78,27 +88,59 @@ export default function Perfil() {
       quality: 0.8,
     });
 
-    if (!result.canceled) setImagemTemp(result.assets[0].uri);
+ 
+
+    if (!result.canceled && result.assets) {
+      setImagem(result.assets[0]); // Atualiza o state com a imagem selecionada
+    }
+
   };
 
 
 
   const salvarAlteracoes = async () => {
     try {
-      await AsyncStorage.multiSet([
-        ['userNome', userData.nome],
-        ['userEmail', userData.email],
-        ['userPeso', userData.peso],
-        ['userAltura', userData.altura],
-        ['userImagem', imagemTemp || userData.imagem || '']
-      ]);
+      const token = await AsyncStorage.getItem('authToken');
+      const formData = new FormData();
       
+      // Use userData em vez de variáveis soltas
+      formData.append('peso', userData.peso);
+      formData.append('altura', userData.altura);
+      
+      if (imagem && imagem.uri.startsWith('data:image')) {
+        const base64Response = await fetch(imagem.uri);
+        const blob = await base64Response.blob();
+        
+        formData.append('imagem', blob, imagem.name || 'foto.png');
+      }
+  
+  
+      const { data } = await axios.post(`${BASE_URL}/api/atualizarPerfil`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+  
+    
+      setUserData(prev => ({
+        ...prev,
+        peso: data.peso,
+        altura: data.altura,
+        imagem_url: data.imagem_url || prev.imagem_url
+      }));
+      
+      setImagemTemp(null);
       setEditando(false);
-      Alert.alert('✅ Perfil atualizado!');
+      Alert.alert('✅ Sucesso!', 'Perfil atualizado');
+      
     } catch (error) {
-      Alert.alert('❌ Erro ao salvar');
+      console.error('Erro:', error.response?.data || error.message);
+      Alert.alert('❌ Erro', error.response?.data?.message || 'Falha ao atualizar');
     }
   };
+
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -108,19 +150,14 @@ export default function Perfil() {
     style={styles.fotoContainer}
     onPress={editando ? selecionarImagem : null}
   >
-    {imagemTemp ? (
+    {imagem ? (
       <Image 
-        source={{ uri: imagemTemp }} 
+        source={{ uri: imagem.uri }} 
         style={styles.fotoPerfil} 
       />
-    ) : perfil?.imagem_url ? (
+    ) : userData.imagem_url ? (
       <Image 
-        source={{ uri: perfil.imagem_url }} 
-        style={styles.fotoPerfil} 
-      />
-    ) : userData.imagem ? (
-      <Image 
-        source={{ uri: userData.imagem }} 
+        source={{ uri: userData.imagem_url }} 
         style={styles.fotoPerfil} 
       />
     ) : (
@@ -135,38 +172,37 @@ export default function Perfil() {
     )}
   </Pressable>
 </View>
-
       {/* Dados do Usuário */}
       <View style={styles.dadosContainer}>
-        <Text style={styles.nomeUsuario}>{perfil?.nome}</Text>
-        <Text style={styles.emailUsuario}>{perfil?.email}</Text>
+        <Text style={styles.nomeUsuario}>{userData.nome}</Text>
+        <Text style={styles.emailUsuario}>{userData.email}</Text>
 
         <View style={styles.camposContainer}>
           <View style={styles.campo}>
             <Text style={styles.label}>Peso (kg)</Text>
             {editando ? (
               <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={userData.peso}
-                onChangeText={(t) => setUserData({...userData, peso: t})}
-              />
+              style={styles.input}
+              keyboardType="numeric"
+              value={userData.peso}
+              onChangeText={(t) => setUserData({...userData, peso: t})}
+            />
             ) : (
-              <Text style={styles.textoDado}>{perfil?.peso} kg</Text>
+              <Text style={styles.textoDado}>{userData.peso} kg</Text>
             )}
           </View>
 
           <View style={styles.campo}>
             <Text style={styles.label}>Altura (cm)</Text>
             {editando ? (
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={userData.altura}
-                onChangeText={(t) => setUserData({...userData, altura: t})}
-              />
+             <TextInput
+             style={styles.input}
+             keyboardType="numeric"
+             value={userData.altura}
+             onChangeText={(t) => setUserData({...userData, altura: t})}
+           />
             ) : (
-              <Text style={styles.textoDado}>{perfil?.altura} cm</Text>
+              <Text style={styles.textoDado}>{userData.altura} cm</Text>
             )}
           </View>
         </View>
