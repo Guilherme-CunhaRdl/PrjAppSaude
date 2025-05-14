@@ -18,6 +18,7 @@ import Frases from '../Screens/Frases';
 import Remedio from '../Screens/remedio';
 import Pressao from '../Screens/pressao';
 import Perfil from  '../Screens/perfil';
+import Geo from '../Screens/geo';
 
 const Stack = createNativeStackNavigator();
 
@@ -94,6 +95,15 @@ export default function Rotas() {
 
 
 <Stack.Screen 
+          name="Geo" 
+          component={Geo}
+          options={({ navigation }) => ({
+            header: () => <HeaderApp navigation={navigation} />,
+          })}
+        />
+
+
+<Stack.Screen 
           name="Login" 
           component={Login} 
           options={{ headerShown: false }} 
@@ -123,13 +133,6 @@ options={({ navigation }) => ({
           })}
         />
 
-        <Stack.Screen 
-          name="Agua" 
-          component={Agua}
-          options={({ navigation }) => ({
-            header: () => <HeaderApp navigation={navigation} />,
-          })}
-        />
 
         <Stack.Screen 
           name="Vacina" 
