@@ -74,14 +74,12 @@ export default function Remedio() {
 
 
     const adicionarRemedio = async () => {
-        console.log("Botão Salvar pressionado");
-        console.log(novoRemedio);
-
+        // Validação dos campos
         if (!novoRemedio.nome) {
             Alert.alert("Aviso", "Digite o nome do remédio");
             return;
         }
-
+    
         if (
             !novoRemedio.horario ||
             !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(novoRemedio.horario)
@@ -89,38 +87,57 @@ export default function Remedio() {
             Alert.alert("Aviso", "Digite um horário válido no formato HH:MM");
             return;
         }
-
-        const remedioParaAdicionar = {
-            nome: novoRemedio.nome,
-            dosagem: novoRemedio.dosagem,
-            horario: novoRemedio.horario,
-            frequencia: novoRemedio.frequencia || "Diário",
-            imagem: novoRemedio.imagem,
-        };
-        console.log(remedioParaAdicionar);
+    
+        const formData = new FormData();
+        formData.append("nome", novoRemedio.nome);
+        formData.append("dosagem", novoRemedio.dosagem || "");
+        formData.append("horario", novoRemedio.horario);
+        formData.append("frequencia", novoRemedio.frequencia || "Diário");
+        formData.append("user_id", 1); // Substitua pelo ID real do usuário logado
+    
+        if (novoRemedio.imagem) {
+            // Verifique se a imagem é base64
+            if (novoRemedio.imagem.startsWith("data:image")) {
+                const base64Response = await fetch(novoRemedio.imagem);
+                const blob = await base64Response.blob();
+    
+                // Adiciona o blob ao FormData
+                formData.append("imagem_path", blob, "foto.png");
+            } else {
+                // Caso contrário, apenas anexa o arquivo diretamente (caso tenha sido capturado com a câmera, por exemplo)
+                const nomeArquivo = novoRemedio.imagem.split("/").pop();
+                const tipoMime = nomeArquivo.split(".").pop();
+    
+                formData.append("imagem_path", {
+                    uri: novoRemedio.imagem,
+                    name: nomeArquivo,
+                    type: `image/${tipoMime}`,
+                });
+            }
+        }
+    
         try {
             const response = await axios.post(
-                "http://127.0.0.1:8000/api/remediosRegistrar",
-                remedioParaAdicionar
+                "http://127.0.0.1:8000/api/remediosRegistrar",  // A URL correta do seu backend
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
             );
-            console.log(response);
-            if (response.data.success) {
-                setRemedios([
-                    ...remedios,
-                    { id: Date.now(), ...remedioParaAdicionar },
-                ]);
-                setModalVisivel(false);
-                setNovoRemedio({
-                    nome: "",
-                    dosagem: "",
-                    horario: "",
-                    frequencia: "",
-                    imagem: null,
-                });
-                Alert.alert("Sucesso!", `Remédio salvo com sucesso!`);
-            } else {
-                Alert.alert("Erro", "Erro ao salvar o remédio.");
-            }
+    
+            console.log(response.data);
+            setRemedios([...remedios, response.data]);
+            setModalVisivel(false);
+            setNovoRemedio({
+                nome: "",
+                dosagem: "",
+                horario: "",
+                frequencia: "",
+                imagem: null,
+            });
+            Alert.alert("Sucesso!", "Remédio salvo com sucesso!");
         } catch (error) {
             console.error(error);
             Alert.alert(
@@ -129,6 +146,8 @@ export default function Remedio() {
             );
         }
     };
+    
+    
 
 
 

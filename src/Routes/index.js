@@ -93,6 +93,11 @@ export default function Rotas() {
         }}
       >
 
+<Stack.Screen 
+          name="Login" 
+          component={Login} 
+          options={{ headerShown: false }} 
+        />
 
 <Stack.Screen 
           name="Geo" 
@@ -103,11 +108,7 @@ export default function Rotas() {
         />
 
 
-<Stack.Screen 
-          name="Login" 
-          component={Login} 
-          options={{ headerShown: false }} 
-        />
+
 
 <Stack.Screen 
   name="Home" 
