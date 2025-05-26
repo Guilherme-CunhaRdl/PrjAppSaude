@@ -45,6 +45,8 @@ export default function Perfil() {
         });
 
        
+
+       
         
         setUserData({
           nome: data.nome || '',
@@ -69,8 +71,54 @@ export default function Perfil() {
   }, []);
 
 
+  const fazerLogout = async () => {
+    await AsyncStorage.clear();
+    navigation.navigate('Login');
+  };
  
-
+  const deletarConta = async () => {
+    console.log("Botão deletar pressionado"); // Verifique se esta mensagem aparece
+    
+    Alert.alert(
+      "Confirmar Exclusão",
+      "Tem certeza que deseja deletar sua conta? Esta ação não pode ser desfeita.",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+          onPress: () => console.log("Cancelado pelo usuário")
+        },
+        { 
+          text: "Deletar", 
+          onPress: async () => {
+            console.log("Usuário confirmou exclusão");
+            
+            try {
+              const token = await AsyncStorage.getItem('authToken');
+              console.log("Token obtido:", token ? "SIM" : "NÃO");
+              
+              console.log("Enviando requisição para:", `${BASE_URL}/api/deletarConta`);
+              const response = await axios.delete(`${BASE_URL}/api/deletarConta`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              
+              console.log("Resposta do servidor:", response.data);
+              
+              await AsyncStorage.clear();
+              console.log("AsyncStorage limpo");
+              
+              navigation.navigate('Login');
+              Alert.alert("Conta deletada", "Sua conta foi deletada com sucesso.");
+            } catch (error) {
+              console.error("Erro completo:", error);
+              console.error("Resposta de erro:", error.response);
+              Alert.alert("Erro", error.response?.data?.message || "Não foi possível deletar sua conta. Tente novamente.");
+            }
+          } 
+        }
+      ]
+    );
+  };
 
 
 
@@ -232,7 +280,21 @@ export default function Perfil() {
           >
             <Text style={styles.textoBotao}>Editar Perfil</Text>
           </Pressable>
+
+
+
+          
+
+          
         )}
+
+<Pressable 
+  style={[styles.botao, styles.botaoLogout]}
+  onPress={fazerLogout}
+>
+  <Text style={styles.textoBotao}>Sair</Text>
+</Pressable>
+
       </View>
     </ScrollView>
   );
@@ -264,6 +326,11 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 5,
   },
+
+  botaoLogout: {
+    backgroundColor: '#FF9800',
+  },
+
   fotoPerfil: {
     width: '100%',
     height: '100%',
@@ -277,6 +344,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#EDF2F7',
     borderRadius: 70,
   },
+
+  botaoDeletar: {
+    backgroundColor: '#FF4D4D',
+    marginTop: 30, // Espaço extra para destacar
+  },
+
   badgeEditar: {
     position: 'absolute',
     bottom: 5,

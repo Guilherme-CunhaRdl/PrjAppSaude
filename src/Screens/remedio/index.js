@@ -186,11 +186,11 @@ export default function Remedio() {
                 {remedios.length > 0 ? (
                     remedios.map((remedio) => (
                         <View key={remedio.id} style={estilos.cardRemedio}>
-                            {remedio.imagem ? (
-                                <Image
-                                    source={{ uri: remedio.imagem }}
-                                    style={estilos.imagemRemedio}
-                                />
+                            {remedio.imagem_path ? (
+<Image
+    source={{ uri: `http://127.0.0.1:8000/${remedio.imagem_path}` }}
+    style={estilos.imagemRemedio}
+/>
                             ) : (
                                 <View style={estilos.iconeRemedio}>
                                     <Icon
