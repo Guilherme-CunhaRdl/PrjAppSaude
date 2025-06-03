@@ -85,20 +85,7 @@ export default function Cadastro() {
   
   
       
-      const formDataEntries = [...formData.entries()];
-      console.log('Dados sendo enviados:', {
-        camposTextuais: {
-          nome: formData.get('nome'),
-          email: formData.get('email'),
-          peso: formData.get('peso'),
-          altura: formData.get('altura')
-        },
-        imagem: {
-          name: formData.get('imagem').name,
-          size: formData.get('imagem').size,
-          type: formData.get('imagem').type
-        }
-      });
+
   
       const response = await axios.post('http://127.0.0.1:8000/api/registrar', formData, {
         headers: {
@@ -111,10 +98,21 @@ export default function Cadastro() {
       console.log('Resposta da API:', response.data);
   
       if (response.data.success) {
+
+        const userData = {
+          id: response.data.user.id,
+          email: response.data.user.email,
+          nome: response.data.user.nome || nome,
+          peso: response.data.user.peso || peso, 
+          altura: response.data.user.altura || altura 
+        }
       
         await AsyncStorage.multiSet([
-          ['userToken', response.data.token], 
-          ['userData', JSON.stringify(response.data.user)]
+          ['userToken', response.data.token || ''],
+          ['authToken', `Bearer ${response.data.token || ''}`],
+          ['userData', JSON.stringify(userData)],
+          ['peso', String(peso)],
+          ['altura', String(altura)]
         ]);
   
        

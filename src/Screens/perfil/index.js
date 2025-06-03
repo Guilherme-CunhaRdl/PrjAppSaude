@@ -56,6 +56,9 @@ export default function Perfil() {
           imagem_url: data.imagem_url || null
         });
 
+
+        
+
         console.log('userData atualizado:', userData);
         
       } catch (err) {
@@ -177,6 +180,19 @@ export default function Perfil() {
         altura: data.altura,
         imagem_url: data.imagem_url || prev.imagem_url
       }));
+
+      const updatedUserData = {
+        ...userData,
+        peso: data.peso ? String(data.peso) : userData.peso,
+        altura: data.altura ? String(data.altura) : userData.altura,
+        imagem_url: data.imagem_url || userData.imagem_url
+    };
+
+      await AsyncStorage.multiSet([
+        ['userData', JSON.stringify(updatedUserData)],
+        ['peso', String(data.peso)],
+        ['altura', String(data.altura)]
+    ]);
       
       setImagemTemp(null);
       setEditando(false);
