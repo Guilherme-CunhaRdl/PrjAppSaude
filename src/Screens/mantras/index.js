@@ -8,30 +8,48 @@ import { Audio } from 'expo-av'; // Biblioteca de áudio do Expo
 const mantras = [
   {
     id: 1,
-    titulo: "Om Mani Padme Hum",
-    duracao: "10:00",
-    categoria: "Tibetano",
-    imagem: 'https://i.imgur.com/7Jy9mZP.jpg',
-    audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', // Exemplo genérico
+    titulo: "Minecraft",
+    duracao: "4:14",
+    categoria: "Tema Principal",
+    imagem: 'https://th.bing.com/th/id/R.9c3995369b5a5335df6b72e587a4200c?rik=9L3g3wtD6HyM5A&pid=ImgRaw&r=0',
+    audio: 'https://vgmsite.com/soundtracks/minecraft/esiyjzozpe/1-08.%20Minecraft.mp3',
     cor: '#4A6FA5'
   },
   {
     id: 2,
-    titulo: "Gayatri Mantra",
-    duracao: "15:00",
-    categoria: "Védico",
-    imagem: 'https://i.imgur.com/5R5hQ9X.jpg',
-    audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+    titulo: "Subwoofer Lullaby",
+    duracao: "3:28",
+    categoria: "Relaxamento",
+    imagem: 'https://th.bing.com/th/id/R.9c3995369b5a5335df6b72e587a4200c?rik=9L3g3wtD6HyM5A&pid=ImgRaw&r=0',
+    audio: 'https://vgmsite.com/soundtracks/minecraft/jrevvjewku/1-03.%20Subwoofer%20Lullaby.mp3',
     cor: '#6B4D57'
   },
   {
     id: 3,
-    titulo: "So Ham Meditation",
-    duracao: "8:00",
-    categoria: "Meditação",
-    imagem: 'https://i.imgur.com/9Fq3WbD.jpg',
-    audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+    titulo: "Aria-Math",
+    duracao: "5:10",
+    categoria: "Exploração",
+    imagem: 'https://th.bing.com/th/id/R.9c3995369b5a5335df6b72e587a4200c?rik=9L3g3wtD6HyM5A&pid=ImgRaw&r=0',
+    audio: 'https://vgmsite.com/soundtracks/minecraft/fbluiiwvgz/2-13.%20Aria%20Math.mp3',
     cor: '#166088'
+  },
+  {
+    id: 4,
+    titulo: "Dirmouth",
+    duracao: "1:55",
+    categoria: "Relaxar",
+    imagem: 'https://kappa.vgmsite.com/soundtracks/hollow-knight-original-soundtrack/00%20Front.jpg',
+    audio: 'https://kappa.vgmsite.com/soundtracks/hollow-knight-original-soundtrack/oluzyprqme/02.%20Dirtmouth.mp3',
+    cor: '#77a2d4'
+  },
+  {
+    id: 5,
+    titulo: "City of Tears",
+    duracao: "2:58",
+    categoria: "Calmo",
+    imagem: 'https://kappa.vgmsite.com/soundtracks/hollow-knight-original-soundtrack/00%20Front.jpg',
+    audio: 'https://kappa.vgmsite.com/soundtracks/hollow-knight-original-soundtrack/ucctfmneeb/09.%20City%20of%20Tears.mp3',
+    cor: '#16467d'
   }
 ];
 

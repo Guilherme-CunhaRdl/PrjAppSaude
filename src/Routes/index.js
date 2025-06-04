@@ -99,19 +99,11 @@ export default function Rotas() {
 
 
 <Stack.Screen 
-  name="Home" 
-  component={Home}
-  options={({ navigation }) => ({  
-    header: () => <HeaderHome navigation={navigation} />,
-  })}
-/>
-
-
-<Stack.Screen 
           name="Login" 
           component={Login} 
           options={{ headerShown: false }} 
         />
+
 
 <Stack.Screen 
           name="Geo" 
@@ -120,6 +112,20 @@ export default function Rotas() {
             header: () => <HeaderApp navigation={navigation} />,
           })}
         />
+
+
+<Stack.Screen 
+  name="Home" 
+  component={Home}
+  options={({ navigation }) => ({  
+    header: () => <HeaderHome navigation={navigation} />,
+  })}
+/>
+
+
+
+
+
 
 
 
@@ -158,7 +164,7 @@ options={({ navigation }) => ({
 
              <Stack.Screen 
           name="Agua" 
-          component={Imc}
+          component={Agua}
           options={({ navigation }) => ({
             header: () => <HeaderApp navigation={navigation} />,
           })}

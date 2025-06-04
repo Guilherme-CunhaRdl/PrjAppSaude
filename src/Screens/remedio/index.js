@@ -21,6 +21,7 @@ const { width } = Dimensions.get("window");
 export default function Remedio() {
     const [remedios, setRemedios] = useState([]);
     const [modalVisivel, setModalVisivel] = useState(false);
+    const [modalEditarVisivel, setModalEditarVisivel] = useState(false);
     const [novoRemedio, setNovoRemedio] = useState({
         nome: "",
         dosagem: "",
@@ -28,6 +29,7 @@ export default function Remedio() {
         frequencia: "",
         imagem: null,
     });
+    const [remedioEditando, setRemedioEditando] = useState(null);
     const [token, setToken] = useState(null);
 
     useEffect(() => {
@@ -100,7 +102,6 @@ export default function Remedio() {
             return;
         }
 
-        // Validação dos campos
         if (!novoRemedio.nome) {
             Alert.alert("Aviso", "Digite o nome do remédio");
             return;
@@ -118,18 +119,13 @@ export default function Remedio() {
         formData.append("frequencia", novoRemedio.frequencia || "Diário");
         
         if (novoRemedio.imagem) {
- 
             if (novoRemedio.imagem.startsWith("data:image")) {
                 const base64Response = await fetch(novoRemedio.imagem);
                 const blob = await base64Response.blob();
-    
-        
                 formData.append("imagem_path", blob, "foto.png");
             } else {
-                // Caso contrário, apenas anexa o arquivo diretamente (caso tenha sido capturado com a câmera, por exemplo)
                 const nomeArquivo = novoRemedio.imagem.split("/").pop();
                 const tipoMime = nomeArquivo.split(".").pop();
-    
                 formData.append("imagem_path", {
                     uri: novoRemedio.imagem,
                     name: nomeArquivo,
@@ -139,11 +135,6 @@ export default function Remedio() {
         }
     
         try {
-            console.log("Enviando dados:", {
-                nome: novoRemedio.nome,
-                temImagem: !!novoRemedio.imagem
-            });
-
             const response = await axios.post(
                 "http://127.0.0.1:8000/api/remedios",
                 formData,
@@ -168,18 +159,100 @@ export default function Remedio() {
             });
             Alert.alert("Sucesso!", "Remédio salvo com sucesso!");
         } catch (error) {
-            console.error("Erro detalhado:", {
-                message: error.message,
-                response: error.response?.data,
-                request: error.request
-            });
+            console.error("Erro detalhado:", error);
             Alert.alert(
                 "Erro",
                 error.response?.data?.message || "Erro ao salvar. Verifique os dados e tente novamente."
             );
         }
     };
+
+    const abrirModalEdicao = (remedio) => {
+        setRemedioEditando(remedio);
+        setNovoRemedio({
+            nome: remedio.nome,
+            dosagem: remedio.dosagem,
+            horario: remedio.horario,
+            frequencia: remedio.frequencia,
+            imagem: remedio.imagem_path ? `http://127.0.0.1:8000/uploads/${remedio.imagem_path}` : null,
+        });
+        setModalEditarVisivel(true);
+    };
+
+    const atualizarRemedio = async () => {
+        if (!token || !remedioEditando) {
+            Alert.alert("Erro", "Usuário não autenticado ou remédio inválido");
+            return;
+        }
     
+        // Validação dos campos
+        if (!novoRemedio.nome) {
+            Alert.alert("Aviso", "Digite o nome do remédio");
+            return;
+        }
+        
+        if (!novoRemedio.horario || !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(novoRemedio.horario)) {
+            Alert.alert("Aviso", "Digite um horário válido no formato HH:MM");
+            return;
+        }
+    
+        const formData = new FormData();
+        formData.append('nome', novoRemedio.nome);
+        formData.append('dosagem', novoRemedio.dosagem || '');
+        formData.append('horario', novoRemedio.horario);
+        formData.append('frequencia', novoRemedio.frequencia || 'Diário');
+    
+        // Tratamento especial para imagens
+        if (novoRemedio.imagem && !novoRemedio.imagem.startsWith('http')) {
+            const uriParts = novoRemedio.imagem.split('.');
+            const fileType = uriParts[uriParts.length - 1];
+            
+            formData.append('imagem_path', {
+                uri: novoRemedio.imagem,
+                name: `photo.${fileType}`,
+                type: `image/${fileType}`,
+            });
+        }
+    
+        try {
+            const response = await axios.post(
+                `http://127.0.0.1:8000/api/remedios/${remedioEditando.id}/update`,
+                formData,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'multipart/form-data',
+                        'Accept': 'application/json'
+                    }
+                }
+            );
+    
+            if (response.data.success) {
+                setRemedios(remedios.map(r => 
+                    r.id === remedioEditando.id ? response.data.data : r
+                ));
+                setModalEditarVisivel(false);
+                Alert.alert("Sucesso!", "Remédio atualizado com sucesso!");
+            }
+        } catch (error) {
+            console.error("Erro completo:", {
+                message: error.message,
+                response: error.response?.data,
+                request: error.request
+            });
+            
+            let errorMessage = "Erro ao atualizar. Verifique os dados e tente novamente.";
+            
+            if (error.response?.data?.errors) {
+                errorMessage = Object.values(error.response.data.errors).join('\n');
+            } else if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            }
+            
+            Alert.alert("Erro", errorMessage);
+        }
+    };
+
     const removerRemedio = async (id) => {
         try {
             const token = await AsyncStorage.getItem('authToken');
@@ -204,12 +277,11 @@ export default function Remedio() {
         }
     };
 
-    
     return (
         <View style={estilos.container}>
             <View style={estilos.cabecalho}>
                 <Icon name="medication" size={28} color="#5A00DD" />
-                <Text style={estilos.tituloCabecalho}>Meus Remédios</Text>
+                <Text style={estilos.tituloCabecalho} >"Meus Remédios"</Text>
                 <TouchableOpacity onPress={() => setModalVisivel(true)}>
                     <Icon name="add-circle" size={28} color="#5A00DD" />
                 </TouchableOpacity>
@@ -220,10 +292,10 @@ export default function Remedio() {
                     remedios.map((remedio) => (
                         <View key={remedio.id} style={estilos.cardRemedio}>
                             {remedio.imagem_path ? (
-<Image
-    source={{ uri: `http://127.0.0.1:8000/uploads/${remedio.imagem_path}` }}
-    style={estilos.imagemRemedio}
-/>
+                                <Image
+                                    source={{ uri: `http://127.0.0.1:8000/uploads/${remedio.imagem_path}` }}
+                                    style={estilos.imagemRemedio}
+                                />
                             ) : (
                                 <View style={estilos.iconeRemedio}>
                                     <Icon
@@ -279,6 +351,13 @@ export default function Remedio() {
                                     </View>
                                 )}
                             </View>
+
+                            <TouchableOpacity
+                                style={estilos.botaoEditar}
+                                onPress={() => abrirModalEdicao(remedio)}
+                            >
+                                <Icon name="edit" size={24} color="#5A00DD" />
+                            </TouchableOpacity>
 
                             <TouchableOpacity
                                 style={estilos.botaoRemover}
@@ -399,6 +478,103 @@ export default function Remedio() {
                     </ScrollView>
                 </View>
             </Modal>
+
+            <Modal
+                animationType="slide"
+                visible={modalEditarVisivel}
+                onRequestClose={() => setModalEditarVisivel(false)}
+            >
+                <View style={estilos.containerModal}>
+                    <View style={estilos.cabecalhoModal}>
+                        <Text style={estilos.tituloModal}>Editar Remédio</Text>
+                        <TouchableOpacity
+                            onPress={() => setModalEditarVisivel(false)}
+                        >
+                            <Icon name="close" size={24} color="#5A00DD" />
+                        </TouchableOpacity>
+                    </View>
+
+                    <ScrollView style={estilos.conteudoModal}>
+                        <TouchableOpacity
+                            style={estilos.botaoImagem}
+                            onPress={tirarFoto}
+                        >
+                            {novoRemedio.imagem ? (
+                                <Image
+                                    source={{ uri: novoRemedio.imagem }}
+                                    style={estilos.previaImagem}
+                                />
+                            ) : (
+                                <View style={estilos.placeholderImagem}>
+                                    <Icon
+                                        name="add-a-photo"
+                                        size={30}
+                                        color="#5A00DD"
+                                    />
+                                    <Text style={estilos.textoBotaoImagem}>
+                                        Alterar foto do remédio (opcional)
+                                    </Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+
+                        <View style={estilos.grupoInput}>
+                            <Text style={estilos.rotuloInput}>
+                                Nome do Remédio *
+                            </Text>
+                            <TextInput
+                                style={estilos.input}
+                                placeholder="Ex: Paracetamol"
+                                value={novoRemedio.nome}
+                                onChangeText={(texto) =>
+                                    setNovoRemedio({
+                                        ...novoRemedio,
+                                        nome: texto,
+                                    })
+                                }
+                            />
+                        </View>
+
+                        <View style={estilos.grupoInput}>
+                            <Text style={estilos.rotuloInput}>Horário *</Text>
+                            <TextInput
+                                style={estilos.input}
+                                placeholder="HH:MM (Ex: 08:30)"
+                                value={novoRemedio.horario}
+                                onChangeText={formatarHorario}
+                                keyboardType="numeric"
+                                maxLength={5}
+                            />
+                        </View>
+
+                        <View style={estilos.grupoInput}>
+                            <Text style={estilos.rotuloInput}>
+                                Dosagem (opcional)
+                            </Text>
+                            <TextInput
+                                style={estilos.input}
+                                placeholder="Ex: 500mg"
+                                value={novoRemedio.dosagem}
+                                onChangeText={(texto) =>
+                                    setNovoRemedio({
+                                        ...novoRemedio,
+                                        dosagem: texto,
+                                    })
+                                }
+                            />
+                        </View>
+
+                        <TouchableOpacity
+                            style={estilos.botaoSalvar}
+                            onPress={atualizarRemedio}
+                        >
+                            <Text style={estilos.textoBotaoSalvar}>
+                                Atualizar Remédio
+                            </Text>
+                        </TouchableOpacity>
+                    </ScrollView>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -473,6 +649,10 @@ const estilos = StyleSheet.create({
     textoDetalhe: {
         fontSize: 15,
         color: "#555",
+    },
+    botaoEditar: {
+        padding: 8,
+        marginLeft: 10,
     },
     botaoRemover: {
         padding: 8,
