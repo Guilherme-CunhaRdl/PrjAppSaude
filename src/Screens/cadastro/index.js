@@ -99,6 +99,9 @@ export default function Cadastro() {
   
       if (response.data.success) {
 
+        const token = response.data.token;
+        const user = response.data.user;
+
         const userData = {
           id: response.data.user.id,
           email: response.data.user.email,
@@ -108,9 +111,9 @@ export default function Cadastro() {
         }
       
         await AsyncStorage.multiSet([
-          ['userToken', response.data.token || ''],
-          ['authToken', `Bearer ${response.data.token || ''}`],
-          ['userData', JSON.stringify(userData)],
+          ['userToken', token],
+          ['authToken', `Bearer ${token}`],
+          ['userData', JSON.stringify(user)],
           ['peso', String(peso)],
           ['altura', String(altura)]
         ]);

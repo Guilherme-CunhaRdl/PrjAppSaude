@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
@@ -23,6 +24,37 @@ export default function Home() {
         { icone: 'format-quote', nome: 'Login', tela: 'Login' },
         { icone: 'format-quote', nome: 'Cadastro', tela: 'Cadastro' }
     ];
+    const [mediaFrequencia, setMediaFrequencia] = useState(null);
+    const BASE_URL = 'http://127.0.0.1:8000';
+
+
+    useEffect(() => {
+        const carregarMedia = async () => {
+            try {
+
+                const userData = await AsyncStorage.getItem('userData');
+                const authToken = await AsyncStorage.getItem('authToken');
+
+                if (!userData || !authToken) return;
+
+                const user = JSON.parse(userData);
+                const token = authToken.replace('Bearer ', '');
+
+                const response = await fetch(`${BASE_URL}/api/media-frequencia/${user.id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                setMediaFrequencia(data.media_frequencia);
+            } catch (error) {
+                console.error('Erro ao buscar média de frequência:', error);
+            }
+        };
+    
+        carregarMedia();
+    }, []);
 
     return (
         <View style={styles.container}>
@@ -41,10 +73,10 @@ export default function Home() {
                     </View>
                     
                     <View style={styles.statusCard}>
-                        <Text style={styles.statusValor}>72 bpm</Text>
+                        <Text style={styles.statusValor}> {mediaFrequencia !== null ? `${mediaFrequencia} bpm` : '...'}</Text>
                         <Text style={styles.statusLabel}>Frequência Cardíaca</Text>
                         <View style={styles.barraProgresso}>
-                            <View style={[styles.barraPreenchimento, { width: '60%', backgroundColor: '#FF4D6D' }]} />
+                            <View style={[styles.barraPreenchimento, { width: `${mediaFrequencia}%`, backgroundColor: '#FF4D6D' }]} />
                         </View>
                     </View>
                 </View>
