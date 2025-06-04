@@ -212,6 +212,12 @@ options={({ navigation }) => ({
           options={{ headerShown: false }} 
         />
 
+<Stack.Screen 
+          name="Agua" 
+          component={Agua} 
+          options={{ headerShown: false }} 
+        />
+
       
      
       </Stack.Navigator>

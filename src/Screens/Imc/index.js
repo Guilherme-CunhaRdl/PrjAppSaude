@@ -20,9 +20,46 @@ export default function Imc() {
   const [imc, setImc] = useState(0);
   const [classificacao, setClassificacao] = useState('Insira seus dados');
   const [valorPreenchimento, setValorPreenchimento] = useState(0); // Estado para o preenchimento
-  const animacao = new Animated.Value(0); // Para outras animações se precisar
+  const animacao = new Animated.Value(0);
+  const BASE_URL = 'http://127.0.0.1:8000';
 
+
+
+  const carregarDadosUsuario = async () => {
+    try {
+
+      const userDataString = await AsyncStorage.getItem('userData');
+      
+      if (userDataString) {
+        const userData = JSON.parse(userDataString);
+        
+        if (userData.peso) {
+          setPeso(userData.peso.toString());
+          await AsyncStorage.setItem('peso', userData.peso.toString());
+        }
+        
+        if (userData.altura) {
+          setAltura(userData.altura.toString());
+          await AsyncStorage.setItem('altura', userData.altura.toString());
+        }
+      }
+      
+      const pesoSalvo = await AsyncStorage.getItem('peso');
+      const alturaSalva = await AsyncStorage.getItem('altura');
+      
+      if (pesoSalvo) setPeso(pesoSalvo);
+      if (alturaSalva) setAltura(alturaSalva);
+      
+    } catch (error) {
+      console.log('Erro ao carregar dados:', error);
+    }
+  };
+  
   useEffect(() => {
+    carregarDadosUsuario();
+
+
+
     const alturaM = altura / 100;
     const valorIMC = alturaM && peso ? (peso / (alturaM * alturaM)) : 0;
     const imcCalc = parseFloat(valorIMC.toFixed(1));

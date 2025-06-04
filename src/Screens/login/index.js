@@ -16,7 +16,7 @@ export default function Login() {
 
     const verificarToken = async () => {
         const token = await AsyncStorage.getItem('userToken');
-        if (token === '1') {
+        if (token != null) {
           navigation.replace('Home'); 
         }
         setLoading(false);
@@ -33,12 +33,23 @@ export default function Login() {
             email: email,
             password: senha
           });
+
+
+          const userData = {
+            id: response.data.user.id,
+            email: response.data.user.email,
+            name: response.data.user.name,
+            peso: response.data.user.peso || null, // Adiciona peso
+            altura: response.data.user.altura || null // Adiciona altura
+        };
       
           await AsyncStorage.multiSet([
-            ['userToken', '1'],
-            ['authToken', response.data.token],
-            ['userData', JSON.stringify(response.data.user)]
-          ]);
+            ['userToken', response.data.token],
+            ['authToken', `Bearer ${response.data.token}`],
+            ['userData', JSON.stringify(userData)],
+            ['peso', response.data.user.peso ? response.data.user.peso.toString() : ''],
+            ['altura', response.data.user.altura ? response.data.user.altura.toString() : '']
+        ]);
       
           navigation.navigate('Home');
         } catch (error) {

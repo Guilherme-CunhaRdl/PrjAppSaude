@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import * as ImagePicker from "expo-image-picker";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get("window");
 
@@ -27,37 +28,60 @@ export default function Remedio() {
         frequencia: "",
         imagem: null,
     });
-
+    const [token, setToken] = useState(null);
 
     useEffect(() => {
-      const carregarRemedios = async () => {
-          try {
-              const resposta = await axios.get("http://127.0.0.1:8000/api/remedios");
-              setRemedios(resposta.data); 
-          } catch (erro) {
-              console.error("Erro ao buscar remédios:", erro);
-              Alert.alert("Erro", "Não foi possível carregar os remédios.");
-          }
-      };
-  
-      carregarRemedios();
-  }, []);
+        const carregarToken = async () => {
+            const storedToken = await AsyncStorage.getItem('authToken');
+            setToken(storedToken);
+        };
+        carregarToken();
+    }, []);
+
+    useEffect(() => {
+        const carregarRemedios = async () => {
+            try {
+                const token = await AsyncStorage.getItem('authToken');
+                const resposta = await axios.get("http://127.0.0.1:8000/api/remedios", {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                setRemedios(resposta.data); 
+            } catch (erro) {
+                console.error("Erro ao buscar remédios:", erro);
+                Alert.alert("Erro", "Não foi possível carregar os remédios.");
+            }
+        };
+
+        if (token) {
+            carregarRemedios();
+        }
+    }, [token]);
 
     useEffect(() => {
         (async () => {
-            await ImagePicker.requestCameraPermissionsAsync();
+            const { status } = await ImagePicker.requestCameraPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Permissão necessária', 'Precisamos acessar sua câmera para tirar fotos');
+            }
         })();
     }, []);
 
     const tirarFoto = async () => {
-        let resultado = await ImagePicker.launchCameraAsync({
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
+        try {
+            let resultado = await ImagePicker.launchCameraAsync({
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 0.7,
+            });
 
-        if (!resultado.canceled) {
-            setNovoRemedio({ ...novoRemedio, imagem: resultado.assets[0].uri });
+            if (!resultado.canceled && resultado.assets) {
+                setNovoRemedio({ ...novoRemedio, imagem: resultado.assets[0].uri });
+            }
+        } catch (error) {
+            console.error("Erro ao acessar câmera:", error);
+            Alert.alert("Erro", "Não foi possível acessar a câmera");
         }
     };
 
@@ -70,20 +94,19 @@ export default function Remedio() {
         }
     };
 
-
-
-
     const adicionarRemedio = async () => {
+        if (!token) {
+            Alert.alert("Erro", "Usuário não autenticado");
+            return;
+        }
+
         // Validação dos campos
         if (!novoRemedio.nome) {
             Alert.alert("Aviso", "Digite o nome do remédio");
             return;
         }
     
-        if (
-            !novoRemedio.horario ||
-            !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(novoRemedio.horario)
-        ) {
+        if (!novoRemedio.horario || !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(novoRemedio.horario)) {
             Alert.alert("Aviso", "Digite um horário válido no formato HH:MM");
             return;
         }
@@ -93,15 +116,14 @@ export default function Remedio() {
         formData.append("dosagem", novoRemedio.dosagem || "");
         formData.append("horario", novoRemedio.horario);
         formData.append("frequencia", novoRemedio.frequencia || "Diário");
-        formData.append("user_id", 1); // Substitua pelo ID real do usuário logado
-    
+        
         if (novoRemedio.imagem) {
-            // Verifique se a imagem é base64
+ 
             if (novoRemedio.imagem.startsWith("data:image")) {
                 const base64Response = await fetch(novoRemedio.imagem);
                 const blob = await base64Response.blob();
     
-                // Adiciona o blob ao FormData
+        
                 formData.append("imagem_path", blob, "foto.png");
             } else {
                 // Caso contrário, apenas anexa o arquivo diretamente (caso tenha sido capturado com a câmera, por exemplo)
@@ -117,17 +139,24 @@ export default function Remedio() {
         }
     
         try {
+            console.log("Enviando dados:", {
+                nome: novoRemedio.nome,
+                temImagem: !!novoRemedio.imagem
+            });
+
             const response = await axios.post(
-                "http://127.0.0.1:8000/api/remediosRegistrar",  // A URL correta do seu backend
+                "http://127.0.0.1:8000/api/remedios",
                 formData,
                 {
                     headers: {
-                        "Content-Type": "multipart/form-data",
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'multipart/form-data',
+                        'Accept': 'application/json'
                     },
+                    transformRequest: () => formData
                 }
             );
     
-            console.log(response.data);
             setRemedios([...remedios, response.data]);
             setModalVisivel(false);
             setNovoRemedio({
@@ -139,39 +168,43 @@ export default function Remedio() {
             });
             Alert.alert("Sucesso!", "Remédio salvo com sucesso!");
         } catch (error) {
-            console.error(error);
+            console.error("Erro detalhado:", {
+                message: error.message,
+                response: error.response?.data,
+                request: error.request
+            });
             Alert.alert(
                 "Erro",
-                "Não foi possível salvar. Verifique a conexão ou o servidor."
+                error.response?.data?.message || "Erro ao salvar. Verifique os dados e tente novamente."
             );
         }
     };
     
-    
-
-
-
-
-    const removerRemedio = async  (id) => {
-      try {
-        const resposta = await axios.delete(`http://127.0.0.1:8000/api/remedios/${id}`);
-        
-        if (resposta.data.success) {
-            // Filtra o remédio removido do estado local
-            setRemedios(remedios.filter((remedio) => remedio.id !== id));
-            Alert.alert("Sucesso", "Remédio excluído com sucesso!");
-        } else {
-            Alert.alert("Erro", "Não foi possível excluir o remédio.");
+    const removerRemedio = async (id) => {
+        try {
+            const token = await AsyncStorage.getItem('authToken');
+            const resposta = await axios.delete(`http://127.0.0.1:8000/api/remedios/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (resposta.data.success) {
+                setRemedios(remedios.filter((remedio) => remedio.id !== id));
+                Alert.alert("Sucesso", "Remédio excluído com sucesso!");
+            } else {
+                Alert.alert("Erro", resposta.data.message || "Não foi possível excluir o remédio.");
+            }
+        } catch (erro) {
+            console.error("Erro ao excluir remédio:", erro);
+            Alert.alert(
+                "Erro",
+                erro.response?.data?.message || "Não foi possível excluir o remédio."
+            );
         }
-    } catch (erro) {
-        console.error("Erro ao excluir remédio:", erro);
-        Alert.alert("Erro", "Não foi possível excluir o remédio.");
-    }
     };
 
-
-
-
+    
     return (
         <View style={estilos.container}>
             <View style={estilos.cabecalho}>
@@ -188,7 +221,7 @@ export default function Remedio() {
                         <View key={remedio.id} style={estilos.cardRemedio}>
                             {remedio.imagem_path ? (
 <Image
-    source={{ uri: `http://127.0.0.1:8000/${remedio.imagem_path}` }}
+    source={{ uri: `http://127.0.0.1:8000/uploads/${remedio.imagem_path}` }}
     style={estilos.imagemRemedio}
 />
                             ) : (
