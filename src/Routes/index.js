@@ -19,6 +19,8 @@ import Remedio from '../Screens/remedio';
 import Pressao from '../Screens/pressao';
 import Perfil from  '../Screens/perfil';
 import Geo from '../Screens/geo';
+import Dormir from '../Screens/dormir';
+import Mantras from '../Screens/mantras';  
 
 const Stack = createNativeStackNavigator();
 
@@ -93,6 +95,17 @@ export default function Rotas() {
         }}
       >
 
+
+
+<Stack.Screen 
+  name="Home" 
+  component={Home}
+  options={({ navigation }) => ({  
+    header: () => <HeaderHome navigation={navigation} />,
+  })}
+/>
+
+
 <Stack.Screen 
           name="Login" 
           component={Login} 
@@ -110,14 +123,6 @@ export default function Rotas() {
 
 
 
-<Stack.Screen 
-  name="Home" 
-  component={Home}
-  options={({ navigation }) => ({  
-    header: () => <HeaderHome navigation={navigation} />,
-  })}
-/>
-
  
 <Stack.Screen 
 name="Perfil" 
@@ -129,6 +134,30 @@ options={({ navigation }) => ({
         <Stack.Screen 
           name="Imc" 
           component={Imc}
+          options={({ navigation }) => ({
+            header: () => <HeaderApp navigation={navigation} />,
+          })}
+        />
+
+<Stack.Screen 
+          name="Mantras" 
+          component={Mantras}
+          options={({ navigation }) => ({
+            header: () => <HeaderApp navigation={navigation} />,
+          })}
+        />
+
+             <Stack.Screen 
+          name="Agua" 
+          component={Imc}
+          options={({ navigation }) => ({
+            header: () => <HeaderApp navigation={navigation} />,
+          })}
+        />
+
+            <Stack.Screen 
+          name="Dormir" 
+          component={Dormir}
           options={({ navigation }) => ({
             header: () => <HeaderApp navigation={navigation} />,
           })}
