@@ -21,6 +21,7 @@ import Perfil from  '../Screens/perfil';
 import Geo from '../Screens/geo';
 import Dormir from '../Screens/dormir';
 import Mantras from '../Screens/mantras';  
+import Diabetes from '../Screens/diabetes';
 
 const Stack = createNativeStackNavigator();
 
@@ -147,6 +148,14 @@ options={({ navigation }) => ({
           })}
         />
 
+        <Stack.Screen 
+          name="Diabetes" 
+          component={Diabetes}
+          options={({ navigation }) => ({
+            header: () => <HeaderApp navigation={navigation} />,
+          })}
+        />
+
              <Stack.Screen 
           name="Agua" 
           component={Imc}
@@ -212,11 +221,7 @@ options={({ navigation }) => ({
           options={{ headerShown: false }} 
         />
 
-<Stack.Screen 
-          name="Agua" 
-          component={Agua} 
-          options={{ headerShown: false }} 
-        />
+ 
 
       
      
