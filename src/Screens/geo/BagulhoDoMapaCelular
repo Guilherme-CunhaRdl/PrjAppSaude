@@ -1,0 +1,633 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator, Dimensions } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
+import * as Location from 'expo-location';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+export default function Geo() {
+  const [location, setLocation] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [academiasProximas, setAcademiasProximas] = useState([]);
+
+  // Mock de academias - substitua por sua API real
+  const mockAcademias = [
+    {
+        id: 1,
+        nome: "Smart Fit Guaianazes",
+        endereco: "Av. José Pinheiro Borges, 100 - Centro",
+        telefone: "(11) 2554-7890",
+        horario: "06:00-22:00",
+        latitude: -23.5390,
+        longitude: -46.4100,
+        bairro: "Guaianazes",
+        preco: 99.90,
+        avaliacao: 4.5
+      },
+      {
+        id: 2,
+        nome: "Gym Center Guaianazes",
+        endereco: "R. João Batista, 255 - Vila São João",
+        telefone: "(11) 2558-4567",
+        horario: "05:30-23:00",
+        latitude: -23.5415,
+        longitude: -46.4082,
+        bairro: "Guaianazes",
+        preco: 89.90,
+        avaliacao: 4.2
+      },
+      {
+        id: 3,
+        nome: "Power House Academia",
+        endereco: "Av. Dr. João Ribeiro, 789 - Centro",
+        telefone: "(11) 2562-3412",
+        horario: "06:00-22:00",
+        latitude: -23.5382,
+        longitude: -46.4125,
+        bairro: "Guaianazes",
+        preco: 120.00,
+        avaliacao: 4.7
+      },
+      {
+        id: 4,
+        nome: "Academia Forma Total",
+        endereco: "R. Sargento Ary Gomes, 450 - Vila Minerva",
+        telefone: "(11) 2556-1289",
+        horario: "07:00-21:00",
+        latitude: -23.5401,
+        longitude: -46.4068,
+        bairro: "Guaianazes",
+        preco: 75.00,
+        avaliacao: 3.9
+      },
+      {
+        id: 5,
+        nome: "Body Health Gym",
+        endereco: "Praça Dom José Gaspar, 33 - Lajeado",
+        telefone: "(11) 2560-9987",
+        horario: "06:00-23:00",
+        latitude: -23.5375,
+        longitude: -46.4093,
+        bairro: "Guaianazes",
+        preco: 110.00,
+        avaliacao: 4.3
+      },
+      {
+        id: 6,
+        nome: "Iron Muscles Academia",
+        endereco: "R. Comendador Souza Fontes, 678 - Cidade A.E. Carvalho",
+        telefone: "(11) 2557-3344",
+        horario: "05:00-00:00",
+        latitude: -23.5420,
+        longitude: -46.4115,
+        bairro: "Guaianazes",
+        preco: 95.00,
+        avaliacao: 4.8
+      },
+      {
+        id: 7,
+        nome: "Academia Energia Pura",
+        endereco: "R. Dr. João Batista, 1123 - Jardim São Paulo",
+        telefone: "(11) 2561-5566",
+        horario: "06:00-22:00",
+        latitude: -23.5398,
+        longitude: -46.4070,
+        bairro: "Guaianazes",
+        preco: 85.00,
+        avaliacao: 4.1
+      },
+      {
+        id: 8,
+        nome: "Fit Center Guaianazes",
+        endereco: "R. Padre Estanislau, 300 - Vila Moraes",
+        telefone: "(11) 2559-8877",
+        horario: "05:00-22:00",
+        latitude: -23.5365,
+        longitude: -46.4132,
+        bairro: "Guaianazes",
+        preco: 80.00,
+        avaliacao: 4.0
+      },
+      {
+        id: 9,
+        nome: "Muscle Power Gym",
+        endereco: "Av. Nordestina, 1500 - Lajeado",
+        telefone: "(11) 2563-1122",
+        horario: "06:00-23:00",
+        latitude: -23.5350,
+        longitude: -46.4150,
+        bairro: "Guaianazes",
+        preco: 105.00,
+        avaliacao: 4.4
+      },
+      {
+        id: 10,
+        nome: "Academia Corpo Livre",
+        endereco: "R. Serra da Mantiqueira, 45 - Jardim Lourdes",
+        telefone: "(11) 2555-6789",
+        horario: "07:00-21:00",
+        latitude: -23.5432,
+        longitude: -46.4058,
+        bairro: "Guaianazes",
+        preco: 70.00,
+        avaliacao: 3.8
+      },
+      // Continuação com mais academias em Guaianazes...
+      {
+        id: 11,
+        nome: "Academia Guaianazes Fitness",
+        endereco: "R. Cap. Pacheco e Chaves, 200 - Vila Princesa Isabel",
+        telefone: "(11) 2564-9988",
+        horario: "06:00-22:00",
+        latitude: -23.5440,
+        longitude: -46.4140,
+        bairro: "Guaianazes",
+        preco: 90.00,
+        avaliacao: 4.2
+      },
+      {
+        id: 12,
+        nome: "New Body Academia",
+        endereco: "R. Dr. João Ribeiro, 500 - Centro",
+        telefone: "(11) 2565-3344",
+        horario: "05:30-22:30",
+        latitude: -23.5385,
+        longitude: -46.4110,
+        bairro: "Guaianazes",
+        preco: 100.00,
+        avaliacao: 4.3
+      },
+      {
+        id: 13,
+        nome: "Academia Força e Saúde",
+        endereco: "Av. José Pinheiro Borges, 300 - Centro",
+        telefone: "(11) 2554-1122",
+        horario: "06:00-22:00",
+        latitude: -23.5395,
+        longitude: -46.4095,
+        bairro: "Guaianazes",
+        preco: 85.00,
+        avaliacao: 4.0
+      },
+      {
+        id: 14,
+        nome: "Guaianazes Gym",
+        endereco: "R. Sgt. Ary Gomes, 600 - Vila Minerva",
+        telefone: "(11) 2556-5544",
+        horario: "07:00-21:00",
+        latitude: -23.5405,
+        longitude: -46.4060,
+        bairro: "Guaianazes",
+        preco: 75.00,
+        avaliacao: 3.9
+      },
+      {
+        id: 15,
+        nome: "Academia Top Forma",
+        endereco: "R. João Batista, 400 - Vila São João",
+        telefone: "(11) 2558-7788",
+        horario: "06:00-22:00",
+        latitude: -23.5418,
+        longitude: -46.4075,
+        bairro: "Guaianazes",
+        preco: 95.00,
+        avaliacao: 4.1
+      },
+    
+      // Ferraz de Vasconcelos (20 academias)
+      {
+        id: 31,
+        nome: "Academia Ferraz Fitness",
+        endereco: "Av. Brasil, 1000 - Centro",
+        telefone: "(11) 4678-1234",
+        horario: "06:00-22:00",
+        latitude: -23.5412,
+        longitude: -46.3689,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 90.00,
+        avaliacao: 4.2
+      },
+      {
+        id: 32,
+        nome: "Body Tech Ferraz",
+        endereco: "R. São Paulo, 250 - Jardim Pérola",
+        telefone: "(11) 4678-5678",
+        horario: "05:30-23:00",
+        latitude: -23.5435,
+        longitude: -46.3702,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 110.00,
+        avaliacao: 4.5
+      },
+      {
+        id: 33,
+        nome: "Ferraz Gym Center",
+        endereco: "Av. São José, 789 - Vila Romanópolis",
+        telefone: "(11) 4679-9012",
+        horario: "06:00-22:00",
+        latitude: -23.5398,
+        longitude: -46.3725,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 85.00,
+        avaliacao: 4.0
+      },
+      {
+        id: 34,
+        nome: "Academia Power Ferraz",
+        endereco: "R. Rio de Janeiro, 450 - Jardim Brasil",
+        telefone: "(11) 4679-3456",
+        horario: "07:00-21:00",
+        latitude: -23.5405,
+        longitude: -46.3668,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 75.00,
+        avaliacao: 3.8
+      },
+      {
+        id: 35,
+        nome: "Muscle House Ferraz",
+        endereco: "Praça da Bíblia, 33 - Centro",
+        telefone: "(11) 4678-7890",
+        horario: "06:00-23:00",
+        latitude: -23.5425,
+        longitude: -46.3693,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 100.00,
+        avaliacao: 4.3
+      },
+      {
+        id: 36,
+        nome: "Ferraz Iron Gym",
+        endereco: "R. Minas Gerais, 678 - Jardim Promissão",
+        telefone: "(11) 4677-1122",
+        horario: "05:00-00:00",
+        latitude: -23.5440,
+        longitude: -46.3715,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 95.00,
+        avaliacao: 4.6
+      },
+      {
+        id: 37,
+        nome: "Academia Saúde Total Ferraz",
+        endereco: "R. Bahia, 1123 - Vila Santo Antônio",
+        telefone: "(11) 4676-3344",
+        horario: "06:00-22:00",
+        latitude: -23.5388,
+        longitude: -46.3670,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 80.00,
+        avaliacao: 4.0
+      },
+      {
+        id: 38,
+        nome: "Fit Club Ferraz",
+        endereco: "R. Paraná, 300 - Jardim São Francisco",
+        telefone: "(11) 4675-5566",
+        horario: "05:00-22:00",
+        latitude: -23.5435,
+        longitude: -46.3732,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 85.00,
+        avaliacao: 4.1
+      },
+      {
+        id: 39,
+        nome: "Academia Ferraz Strong",
+        endereco: "Av. Santa Catarina, 1500 - Jardim Santa Tereza",
+        telefone: "(11) 4674-7788",
+        horario: "06:00-23:00",
+        latitude: -23.5450,
+        longitude: -46.3750,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 105.00,
+        avaliacao: 4.4
+      },
+      {
+        id: 40,
+        nome: "New Gym Ferraz",
+        endereco: "R. Goiás, 45 - Vila Santo Antônio",
+        telefone: "(11) 4673-9900",
+        horario: "07:00-21:00",
+        latitude: -23.5372,
+        longitude: -46.3658,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 70.00,
+        avaliacao: 3.7
+      },
+      // Continuação com mais academias em Ferraz...
+      {
+        id: 41,
+        nome: "Academia Ferraz Forma",
+        endereco: "R. Amazonas, 200 - Jardim Promissão",
+        telefone: "(11) 4672-1122",
+        horario: "06:00-22:00",
+        latitude: -23.5445,
+        longitude: -46.3720,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 90.00,
+        avaliacao: 4.2
+      },
+      {
+        id: 42,
+        nome: "Body Action Ferraz",
+        endereco: "R. Mato Grosso, 500 - Centro",
+        telefone: "(11) 4671-3344",
+        horario: "05:30-22:30",
+        latitude: -23.5415,
+        longitude: -46.3710,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 100.00,
+        avaliacao: 4.3
+      },
+      {
+        id: 43,
+        nome: "Academia Ferraz Saúde",
+        endereco: "Av. Pernambuco, 300 - Jardim Pérola",
+        telefone: "(11) 4670-5566",
+        horario: "06:00-22:00",
+        latitude: -23.5435,
+        longitude: -46.3695,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 85.00,
+        avaliacao: 4.0
+      },
+      {
+        id: 44,
+        nome: "Ferraz Fitness Club",
+        endereco: "R. Ceará, 600 - Vila Romanópolis",
+        telefone: "(11) 4669-7788",
+        horario: "07:00-21:00",
+        latitude: -23.5408,
+        longitude: -46.3730,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 75.00,
+        avaliacao: 3.9
+      },
+      {
+        id: 45,
+        nome: "Academia Top Ferraz",
+        endereco: "R. Alagoas, 400 - Jardim Brasil",
+        telefone: "(11) 4668-9900",
+        horario: "06:00-22:00",
+        latitude: -23.5398,
+        longitude: -46.3675,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 95.00,
+        avaliacao: 4.1
+      },
+      // Últimas academias...
+      {
+        id: 46,
+        nome: "Academia Ferraz Ativa",
+        endereco: "R. Sergipe, 150 - Jardim Santa Tereza",
+        telefone: "(11) 4667-1122",
+        horario: "06:00-23:00",
+        latitude: -23.5455,
+        longitude: -46.3740,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 85.00,
+        avaliacao: 4.0
+      },
+      {
+        id: 47,
+        nome: "Ferraz Extreme Gym",
+        endereco: "R. Espírito Santo, 220 - Vila Santo Antônio",
+        telefone: "(11) 4666-3344",
+        horario: "05:30-22:30",
+        latitude: -23.5385,
+        longitude: -46.3660,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 110.00,
+        avaliacao: 4.5
+      },
+      {
+        id: 48,
+        nome: "Academia Ferraz Vital",
+        endereco: "R. Paraíba, 350 - Jardim São Francisco",
+        telefone: "(11) 4665-5566",
+        horario: "06:00-22:00",
+        latitude: -23.5448,
+        longitude: -46.3728,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 90.00,
+        avaliacao: 4.2
+      },
+      {
+        id: 49,
+        nome: "Ferraz Power Center",
+        endereco: "R. Rondônia, 180 - Jardim Promissão",
+        telefone: "(11) 4664-7788",
+        horario: "07:00-21:00",
+        latitude: -23.5430,
+        longitude: -46.3710,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 75.00,
+        avaliacao: 3.8
+      },
+      {
+        id: 50,
+        nome: "Academia Ferraz Total",
+        endereco: "R. Acre, 290 - Centro",
+        telefone: "(11) 4663-9900",
+        horario: "06:00-22:00",
+        latitude: -23.5410,
+        longitude: -46.3700,
+        bairro: "Ferraz de Vasconcelos",
+        preco: 95.00,
+        avaliacao: 4.1
+      }
+  ];
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('Permissão para acessar localização foi negada');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        let location = await Location.getCurrentPositionAsync({});
+        setLocation(location.coords);
+        
+        // Simula busca de academias próximas (substitua por sua API)
+        setAcademiasProximas(mockAcademias);
+      } catch (error) {
+        setErrorMsg('Erro ao obter localização');
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#5A00A3" />
+        <Text style={styles.loadingText}>Obtendo sua localização...</Text>
+      </View>
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <View style={styles.errorContainer}>
+        <Icon name="error-outline" size={50} color="#ff4444" />
+        <Text style={styles.errorText}>{errorMsg}</Text>
+        <Pressable 
+          style={styles.retryButton}
+          onPress={() => window.location.reload()}
+        >
+          <Text style={styles.retryButtonText}>Tentar novamente</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Academias próximas</Text>
+        <View style={styles.locationInfo}>
+          <Icon name="location-on" size={18} color="#5A00A3" />
+          <Text style={styles.locationText}>Sua localização atual</Text>
+        </View>
+      </View>
+
+      <MapView
+        style={styles.map}
+        initialRegion={{
+          latitude: location.latitude,
+          longitude: location.longitude,
+          latitudeDelta: 0.0222,
+          longitudeDelta: 0.0121,
+        }}
+        showsUserLocation={true}
+      >
+        {/* Marcador da localização atual */}
+        <Marker
+          coordinate={{
+            latitude: location.latitude,
+            longitude: location.longitude,
+          }}
+          title="Você está aqui"
+          pinColor="#5A00A3"
+        />
+
+        {/* Marcadores das academias */}
+        {academiasProximas.map((academia) => (
+          <Marker
+            key={academia.id}
+            coordinate={{
+              latitude: academia.latitude,
+              longitude: academia.longitude,
+            }}
+            title={academia.nome}
+          >
+            <View style={styles.markerAcademia}>
+              <Icon name="fitness-center" size={24} color="#fff" />
+            </View>
+          </Marker>
+        ))}
+      </MapView>
+
+      <Pressable 
+        style={styles.refreshButton}
+        onPress={async () => {
+          setLoading(true);
+          try {
+            let location = await Location.getCurrentPositionAsync({});
+            setLocation(location.coords);
+          } catch (error) {
+            setErrorMsg('Erro ao atualizar localização');
+          } finally {
+            setLoading(false);
+          }
+        }}
+      >
+        <Icon name="refresh" size={24} color="#fff" />
+      </Pressable>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  header: {
+    padding: 20,
+    paddingTop: 50,
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  locationInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  locationText: {
+    marginLeft: 5,
+    color: '#666',
+  },
+  map: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height - 150,
+  },
+  markerAcademia: {
+    backgroundColor: '#5A00A3',
+    padding: 8,
+    borderRadius: 20,
+  },
+  refreshButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    backgroundColor: '#5A00A3',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 3,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 15,
+    color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    marginTop: 15,
+    color: '#ff4444',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: 20,
+    backgroundColor: '#5A00A3',
+    padding: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+});

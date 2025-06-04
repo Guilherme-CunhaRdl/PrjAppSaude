@@ -21,7 +21,7 @@ export default function Home() {
         { icone: 'favorite-border', nome: 'Pressão', tela: 'Pressao' },
         { icone: 'eco', nome: 'Nutrição', tela: 'Frutas' },
         { icone: 'format-quote', nome: 'Motivação', tela: 'Frases' },
-        { icone: 'format-quote', nome: 'Login', tela: 'Login' },
+        { icone: 'format-quote', nome: 'Geo', tela: 'Geo' },
         { icone: 'format-quote', nome: 'Cadastro', tela: 'Cadastro' }
     ];
     const [mediaFrequencia, setMediaFrequencia] = useState(null);
